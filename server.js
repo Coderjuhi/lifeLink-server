@@ -4,6 +4,7 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/auth');
+const adminRoutes = require('./routes/admin');
 
 const app = express();
 
@@ -12,7 +13,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// ✅ Smart CORS setup — allows any origin but supports credentials
+
+//  Smart CORS setup — allows any origin but supports credentials
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   if (origin) {
@@ -35,8 +37,13 @@ app.get('/', (req, res) => {
   res.send(' Server is Running');
 });
 
+//admin outes
+app.use('/api/admin', adminRoutes);
+
 // API routes
 app.use('/api', authRoutes);
+
+
 
 // Start server
 const PORT = process.env.PORT || 5000;

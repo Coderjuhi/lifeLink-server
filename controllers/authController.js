@@ -18,7 +18,7 @@ function formatMemberSince(date) {
   });
 }
 
-// ✅ Signup Controller
+//  Signup Controller
 exports.signup = async (req, res) => {
   try {
     const { name, email, password, accountType, bloodType, phone, address } = req.body;
@@ -76,7 +76,7 @@ exports.signup = async (req, res) => {
   }
 };
 
-// ✅ Login Controller
+//  Login Controller
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -118,7 +118,7 @@ exports.login = async (req, res) => {
   }
 };
 
-// ✅ Get Current User Controller
+//  Get Current User Controller
 exports.me = async (req, res) => {
   try {
     const user = await User.findById(req.userId).select('-password');
@@ -142,7 +142,7 @@ exports.me = async (req, res) => {
   }
 };
 
-// ✅ Logout Controller
+// Logout Controller
 exports.logout = (req, res) => {
   res.clearCookie('token', {
     httpOnly: true,
