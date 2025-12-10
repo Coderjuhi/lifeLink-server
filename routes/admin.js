@@ -17,7 +17,7 @@ router.get("/stats", async (req, res) => {
             accountType: "hospital"
         });
 
-        const livesConnected = activeDonors + partnerHospitals; // or any logic you want
+        const livesConnected = activeDonors + partnerHospitals; 
 
         return res.json({
             totalUsers,
