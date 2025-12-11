@@ -23,7 +23,7 @@ const userSchema = new mongoose.Schema({
 
   address: { type: String, trim: true },
 
-  // ✅ NEW FIELD (for availability toggle)
+  //  NEW FIELD (for availability toggle)
   availability: { 
     type: Boolean, 
     default: true 
