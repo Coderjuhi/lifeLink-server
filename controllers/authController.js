@@ -75,6 +75,8 @@ exports.signup = async (req, res) => {
         phone: savedUser.phone || null,
         address: savedUser.address || null,
         isActive: savedUser.isActive, // FIXED
+          availability: savedUser.availability, //  ADD THIS
+
         memberSince: formatMemberSince(savedUser.createdAt),
       },
       token,
@@ -123,6 +125,8 @@ exports.login = async (req, res) => {
         phone: user.phone || null,
         address: user.address || null,
         isActive: user.isActive, // FIXED
+            availability: user.availability, // ADD THIS
+
         memberSince: formatMemberSince(user.createdAt),
       },
       token,
@@ -151,6 +155,8 @@ exports.me = async (req, res) => {
         phone: user.phone || null,
         address: user.address || null,
         isActive: user.isActive, // FIXED
+         availability: user.availability, // ADD THIS
+
         memberSince: formatMemberSince(user.createdAt),
       },
     });
@@ -164,32 +170,32 @@ exports.me = async (req, res) => {
 // UPDATE DONOR AVAILABILITY
 exports.updateAvailability = async (req, res) => {
   try {
-    const { available } = req.body;
+    // read correct field name
+    const { availability } = req.body;
 
-    // Validation
-    if (typeof available !== "boolean") {
-      return res
-        .status(400)
-        .json({ message: "Availability must be boolean" });
+    //proper boolean validation
+    if (typeof availability !== "boolean") {
+      return res.status(400).json({
+        message: "Availability must be boolean",
+      });
     }
 
-    // UPDATE the correct field: availability (not isActive)
+    //  update ONLY availability
     const updatedUser = await User.findByIdAndUpdate(
       req.userId,
-      { availability: available },
+      { availability },
       { new: true }
     ).select("-password");
 
-    return res.json({
+    return res.status(200).json({
       message: "Availability updated successfully",
-      user: updatedUser
+      user: updatedUser,
     });
   } catch (error) {
     console.error("Update availability error:", error);
     return res.status(500).json({ message: "Server error" });
   }
 };
-
 
 
 
