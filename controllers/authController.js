@@ -20,7 +20,6 @@ function formatMemberSince(date) {
 
 // ---------------------------------------------
 // SIGNUP
-// ---------------------------------------------
 exports.signup = async (req, res) => {
   try {
     const { name, email, password, accountType, bloodType, phone, address } =
@@ -75,7 +74,7 @@ exports.signup = async (req, res) => {
         phone: savedUser.phone || null,
         address: savedUser.address || null,
         isActive: savedUser.isActive, // FIXED
-          availability: savedUser.availability, //  ADD THIS
+        availability: savedUser.availability, //  ADD THIS
 
         memberSince: formatMemberSince(savedUser.createdAt),
       },
@@ -137,9 +136,8 @@ exports.login = async (req, res) => {
   }
 };
 
-// ---------------------------------------------
+
 // GET CURRENT USER
-// ---------------------------------------------
 exports.me = async (req, res) => {
   try {
     const user = await User.findById(req.userId).select("-password");
@@ -163,6 +161,48 @@ exports.me = async (req, res) => {
   } catch (err) {
     console.error("Me error:", err);
     return res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.checkUser = async (req, res) => {
+  try {
+    const token =
+      req.body.token ||
+      req.cookies?.token ||
+      req.header("Authorization")?.replace("Bearer ", "");
+
+    if (!token) {
+      return res.status(401).json({ message: "Token required" });
+    }
+
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    const user = await User.findById(decoded.id).select("-password");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res.json({
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        accountType: user.accountType,
+        bloodType: user.bloodType || null,
+        phone: user.phone || null,
+        address: user.address || null,
+        isActive: user.isActive,
+        availability: user.availability,
+        memberSince: formatMemberSince(user.createdAt),
+      },
+    });
+  } catch (err) {
+    console.error("CheckUser error:", err.message);
+    return res.status(401).json({
+      message:
+       "Invalid token",
+    });
   }
 };
 

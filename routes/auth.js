@@ -8,6 +8,7 @@ router.post('/signup', authController.signup);
 router.post('/login', authController.login);
 
 router.get('/me', authMiddleware, authController.me);
+router.get('/checkUser', authMiddleware, authController.checkUser);
 router.post('/logout', authController.logout);
 
 // ADD THIS — Update Availability Route
