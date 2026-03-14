@@ -8,12 +8,41 @@ const User = require("../models/User");
 const JWT_SECRET = process.env.JWT_SECRET;
 
 
+router.put("/update-profile", async (req, res) => {
+
+    try {
+
+        const token = req.cookies.token;
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        const user = await User.findByIdAndUpdate(
+            decoded.id,
+            {
+                name: req.body.name,
+                address: req.body.address
+            },
+            { new: true }
+        );
+
+        res.json({
+            user
+        });
+
+    } catch (err) {
+
+        res.status(500).json({
+            message: "Error updating profile"
+        });
+
+    }
+
+});
 // Send Emergency Request
 router.post("/emergency", async (req, res) => {
 
     try {
 
-        // Token get karo
         const token =
             req.body.token ||
             req.cookies?.token ||
@@ -25,10 +54,8 @@ router.post("/emergency", async (req, res) => {
             });
         }
 
-        // Decode token
         const decoded = jwt.verify(token, JWT_SECRET);
 
-        // User find karo
         const user = await User.findById(decoded.id);
 
         if (!user) {
@@ -37,24 +64,97 @@ router.post("/emergency", async (req, res) => {
             });
         }
 
-
-        // Emergency entry create karo
         const request = new Emergency({
-
-            sessionId: user._id,   // automatic user id
-
+            sessionId: user._id,
             donorType: req.body.donorType,
-
-            bloodGrp: user.bloodType, // automatic blood group
-
+            bloodGrp: user.bloodType,   
+            organType: req.body.donorType === "Organ Transplant"
+                ? req.body.organType
+                : null,
             resolved: false
-
         });
 
         await request.save();
 
         res.json({
             message: "Emergency Request Sent Successfully"
+        });
+
+    } catch (err) {
+
+        res.status(500).json({
+            message: err.message
+        });
+
+    }
+
+});
+
+// GET Request Data API
+router.get("/donordata", async (req, res) => {
+    try {
+        const token =
+            req.cookies?.token ||
+            req.header("Authorization")?.replace("Bearer ", "");
+
+        if (!token) {
+            return res.status(401).json({
+                message: "Token required"
+            });
+        }
+        // 2 Verify token
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const user = await User.findById(decoded.id);
+        // User find karo
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found"
+            });
+        }
+
+        const bloodType = user.bloodType;
+        const address = user.address;
+        // Blood compatibility table
+        const compatibility = {
+
+            "O-": ["O-"],
+            "O+": ["O-", "O+"],
+            "A-": ["O-", "A-"],
+            "A+": ["O-", "O+", "A-", "A+"],
+            "B-": ["O-", "B-"],
+            "B+": ["O-", "O+", "B-", "B+"],
+            "AB-": ["O-", "A-", "B-", "AB-"],
+            "AB+": ["O-", "O+", "A-", "A+", "B-", "B+", "AB-", "AB+"]
+
+        };
+
+        const receiveFrom = compatibility[bloodType] || [];
+        // Compatible users find karo
+        const users = await User.find({
+            _id: { $ne: decoded.id },
+            accountType: "donor",   // 
+            availability: true,
+            isActive: true,
+            bloodType: { $in: receiveFrom },
+            address: { $regex: new RegExp(address, "i") }
+        }).select("name bloodType address phone");
+
+        if (users.length === 0) {
+            return res.status(200).json({
+                message: "No users available in your city with compatible blood group",
+                data: []
+            });
+        }
+
+        res.json({
+            sessionId: decoded.id,  // send correct id
+            address,
+            bloodType,
+            compatibleBloodGroups: receiveFrom,
+            totalMatched: users.length,
+            receiveFrom,
+            data: users
+
         });
 
     } catch (err) {
@@ -68,9 +168,9 @@ router.post("/emergency", async (req, res) => {
 });
 
 
-
 // GET Request Data API
-router.get("/requestdata", async (req, res) => {
+router.get("/recipientdata", async (req, res) => {
+
     try {
         const token =
             req.cookies?.token ||
@@ -82,14 +182,10 @@ router.get("/requestdata", async (req, res) => {
             });
         }
 
-
-        // 2 Verify token
+        // Verify token
         const decoded = jwt.verify(token, JWT_SECRET);
 
         const user = await User.findById(decoded.id);
-
-
-        // User find karo
 
         if (!user) {
             return res.status(404).json({
@@ -98,12 +194,13 @@ router.get("/requestdata", async (req, res) => {
         }
 
         const bloodType = user.bloodType;
-        const address = user.address;
 
+        // Extract city from address
+        const address = user.address.trim();
+        const city = address.split(",").pop().trim();
 
         // Blood compatibility table
-        const compatibility = {
-
+        const donateCompatibility = {
             "O-": ["O-", "O+", "A-", "A+", "B-", "B+", "AB-", "AB+"],
             "O+": ["O+", "A+", "B+", "AB+"],
             "A-": ["A-", "A+", "AB-", "AB+"],
@@ -112,45 +209,116 @@ router.get("/requestdata", async (req, res) => {
             "B+": ["B+", "AB+"],
             "AB-": ["AB-", "AB+"],
             "AB+": ["AB+"]
-
         };
 
+        const donateTo = donateCompatibility[bloodType] || [];
 
-        const donateTo = compatibility[bloodType] || [];
-
-
-        // Compatible users find karo
+        // Find compatible recipients
         const users = await User.find({
-           _id: { $ne: decoded.id },
+            _id: { $ne: decoded.id },
+            accountType: "recipient",
+            availability: true,
+            isActive: true,
             bloodType: { $in: donateTo },
-            address: address
+            address: { $regex: city, $options: "i" } // match city anywhere
         }).select("name bloodType address phone");
-        
-        if (users.length === 0) {
-      return res.status(200).json({
-        message: "No users available in your city with compatible blood group"
-      });
-    }
 
+        if (users.length === 0) {
+            return res.status(200).json({
+                message: "No users available in your city with compatible blood group",
+                data: []
+            });
+        }
 
         res.json({
-            sessionId: decoded.id,  // send correct id
-            address,
+            sessionId: decoded.id,
+            city,
             bloodType,
             compatibleBloodGroups: donateTo,
             totalMatched: users.length,
-            donateTo,
             data: users
-
         });
 
     } catch (err) {
 
         res.status(500).json({
             message: err.message
-        })
+        });
 
     }
+
+});
+
+router.get("/nearby-requests", async (req, res) => {
+
+  try {
+
+    const token =
+      req.cookies?.token ||
+      req.header("Authorization")?.replace("Bearer ", "");
+
+    if (!token) {
+      return res.status(401).json({
+        message: "Token required"
+      });
+    }
+
+    // Verify token
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    const donor = await User.findById(decoded.id);
+
+    if (!donor) {
+      return res.status(404).json({
+        message: "User not found"
+      });
+    }
+
+    const donorBlood = donor.bloodType;
+
+    // SAME ADDRESS LOGIC AS recipientdata
+    const address = donor.address.trim();
+    const city = address.split(",").pop().trim();
+
+    // Blood donation compatibility
+    const donateCompatibility = {
+      "O-": ["O-", "O+", "A-", "A+", "B-", "B+", "AB-", "AB+"],
+      "O+": ["O+", "A+", "B+", "AB+"],
+      "A-": ["A-", "A+", "AB-", "AB+"],
+      "A+": ["A+", "AB+"],
+      "B-": ["B-", "B+", "AB-", "AB+"],
+      "B+": ["B+", "AB+"],
+      "AB-": ["AB-", "AB+"],
+      "AB+": ["AB+"]
+    };
+
+    const donateTo = donateCompatibility[donorBlood] || [];
+
+    // Find emergency requests
+    const requests = await Emergency.find({
+      resolved: false,
+      bloodGrp: { $in: donateTo }
+    }).populate("sessionId", "name address phone");
+
+    // SAME CITY FILTER AS recipientdata
+    const filtered = requests.filter(req =>
+      req.sessionId?.address?.toLowerCase().includes(city.toLowerCase())
+    );
+
+    res.json({
+      donorCity: city,
+      donorBloodType: donorBlood,
+      totalRequests: filtered.length,
+      data: filtered
+    });
+
+  } catch (err) {
+
+    res.status(500).json({
+      message: err.message
+    });
+
+  }
 
 });
 

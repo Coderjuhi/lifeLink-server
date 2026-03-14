@@ -1,7 +1,53 @@
 const express = require("express");
 const User = require("../models/User");
+const jwt = require("jsonwebtoken");
 
 const router = express.Router();
+const JWT_SECRET = process.env.JWT_SECRET || "change_this_secret";
+
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+
+
+// Admin signin route
+router.post("/", (req, res) => {
+    const { email, password } = req.body;
+
+    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+        const token = jwt.sign(
+            { email, accountType: "admin" },
+            JWT_SECRET,
+            { expiresIn: "7d" }
+        );
+
+        res.cookie("token", token, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 });
+        res.json({
+            message: "Admin logged in successfully",
+            email,
+            accountType: "admin"
+        });
+    }
+
+    return res.status(401).json({ message: "Invalid email or password" });
+});
+
+// Admin info route
+router.get("/me", (req, res) => {
+    const token = req.cookies?.token;
+    if (!token)
+        return res.status(401).json({ message: "Not logged in" });
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (decoded.accountType !== "admin")
+            return res.status(403).json({ message: "Forbidden" });
+
+        res.json({ user: { email: decoded.email, accountType: "admin" } });
+    } catch (err) {
+        res.status(401).json({ message: "Invalid token" });
+    }
+});
+
 
 // ADMIN DASHBOARD STATS
 
@@ -17,7 +63,7 @@ router.get("/stats", async (req, res) => {
             accountType: "hospital"
         });
 
-        const livesConnected = activeDonors + partnerHospitals; 
+        const livesConnected = activeDonors + partnerHospitals;
 
         return res.json({
             totalUsers,

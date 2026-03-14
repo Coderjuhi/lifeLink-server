@@ -2,17 +2,24 @@ const mongoose = require("mongoose");
 
 const emergencySchema = new mongoose.Schema({
 
- sessionId: String,
+  sessionId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User"
+  },
 
- donorType: String,
+  donorType: String,
 
- bloodGrp: String,
+  bloodGrp: String,
 
- resolved: {
-  type: Boolean,
-  default: false
- }
+  organType: String,
 
+  resolved: {
+    type: Boolean,
+    default: false
+  }
+
+},{
+    timestamps:true
 });
 
 module.exports = mongoose.model("Emergency", emergencySchema);
