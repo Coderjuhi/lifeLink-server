@@ -18,7 +18,6 @@ function formatMemberSince(date) {
   });
 }
 
-// ---------------------------------------------
 // SIGNUP
 exports.signup = async (req, res) => {
   try {

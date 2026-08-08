@@ -205,6 +205,27 @@ router.get("/accepted-response", async (req, res) => {
   }
 });
 
+router.put("/reject-response/:id", async (req, res) => {
+  try {
+    const responseId = req.params.id;
+
+    const rejected = await Response.findByIdAndUpdate(
+      responseId,
+      { status: "rejected", isRead: false },
+      { new: true }
+    );
+
+    if (!rejected) {
+      return res.status(404).json({ message: "Response not found" });
+    }
+
+    res.json({ success: true, data: rejected });
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // GET Request Data API
 router.get("/donordata", async (req, res) => {
   try {
@@ -404,7 +425,7 @@ router.get("/nearby-requests", async (req, res) => {
 
  let query = { resolved: false };
 
-// 🧠 If user is DONOR → apply compatibility
+// If user is DONOR → apply compatibility
 if (donor.accountType === "donor") {
   query.$or = [
     {
