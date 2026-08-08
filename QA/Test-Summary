@@ -1,0 +1,88 @@
+# LifeLink - Test Summary Report
+
+## 1. Project Information
+
+Project: LifeLink – Blood & Organ Donation Management Platform
+
+Testing Type: Manual Testing
+
+Tester: Juhi Gupta
+
+Test Environment:
+- OS: Windows
+- Browser: Google Chrome
+- API Tool: Postman
+- Database: MongoDB
+
+## 2. Testing Objective
+
+The objective of testing was to verify the functionality,
+validation, usability and integration of the major LifeLink
+application modules.
+
+## 3. Modules Tested
+
+- Login
+- Registration
+- Donor
+- Recipient
+- Hospital
+- Admin
+- Blood Search
+- Organ Search
+- Dashboard
+- Logout
+- Emergency SOS
+- REST APIs
+- Database
+
+## 4. Testing Types
+
+- Functional Testing
+- UI Testing
+- Integration Testing
+- Smoke Testing
+- Sanity Testing
+- Regression Testing
+- API Testing
+- Database Testing
+
+## 5. Test Execution Summary
+
+| Metric | Result |
+|---|---:|
+| Total Test Cases | 30 |
+| Executed | 30 |
+| Passed | XX |
+| Failed | XX |
+| Blocked | XX |
+
+## 6. Defects Identified
+
+| Bug ID |   Module         |   Issue |                              Severity | Status |
+|---|---------|--------------|------------------------------------------------|------|
+| BUG-001 | Registration | Full Name has no maximum character validation | Medium | Open |
+| BUG-002 | Registration | Invalid email accepted without error | Medium | Open |
+| BUG-003 | Registration | Empty Location accepted | Medium | Open |
+| BUG-004 | Registration | Location accepts 0 | Medium | Open |
+| BUG-005 | Registration | Weak password accepted | High | Open |
+| BUG-006 | Logout | Previous login input remains after logout | High | Open |
+
+## 7. Overall Result
+
+Testing identified several validation and logout-related issues
+during execution. The identified defects were documented with
+steps to reproduce, expected results, actual results and
+supporting screenshots.
+
+## 8. Recommendation
+
+The identified defects should be fixed and the affected test
+cases should be executed again during regression testing.
+
+## 9. Conclusion
+
+LifeLink was tested across its major user workflows. Functional,
+UI, integration, API and database validation activities were
+performed. Defects discovered during testing were documented and
+will be retested after fixes are implemented.

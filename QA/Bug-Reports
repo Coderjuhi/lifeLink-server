@@ -1,0 +1,54 @@
+BUG-001: Full Name field does not have a maximum character limit
+
+
+BUG-002: Invalid email format is accepted during registration
+
+Expected:
+Validation message should be displayed for an invalid email format.
+
+Actual:
+Application accepts the invalid email without displaying an error.
+
+
+BUG-003: Location field can be submitted without entering a value
+
+Expected:
+Required-field validation should be displayed.
+
+Actual:
+Form can be submitted without providing location.
+
+
+BUG-004: Location field accepts invalid numeric value
+
+Expected:
+Location should accept a valid location value.
+
+Actual:
+The value "0" is accepted without validation.
+
+BUG-005: Weak password accepted during registration
+
+Expected:
+Application should enforce password requirements such as
+minimum length and/or password complexity.
+
+Actual:
+Weak passwords are accepted.
+
+
+BUG-006: Login fields retain previous user credentials after logout
+
+Steps:
+1. Login with a user account.
+2. Logout.
+3. Observe the Sign In page.
+
+Expected:
+Login fields should be cleared after logout.
+
+Actual:
+Previously entered user information remains populated.
+
+Severity: High
+Priority: High
